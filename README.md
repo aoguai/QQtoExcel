@@ -30,6 +30,10 @@ A tool for PC QQ to export TXT chat records to excel tables
 
 3. 运行 QQtoExcel.py --> 输入聊天记录txt路径 --> 输入导出路径 --> 导出
 
+如果您是windows用户，没有浏览项目代码需求
+
+可以前往[下载页面](https://github.com/aoguai/QQtoExcel/releases)下载可执行文件，直接运行
+
 ### 注意事项
 |  规定名称   | 解释  |
 |  ----  | ----  |
@@ -51,6 +55,10 @@ A tool for PC QQ to export TXT chat records to excel tables
 
 例如，如检测到您的分组或者昵称存在非法字符将会把非法字符替换为"()"，避免windows系统下文件名规定导致的保存失败。
 
+## 效果
+![1](https://github.com/aoguai/QQtoExcel/blob/main/images/1.png)
+![2](https://github.com/aoguai/QQtoExcel/blob/main/images/2.png)
+
 ## 开发规划
 ### 规划
 - [x] 支持好友/群聊/全部聊天记录 转换导出
@@ -61,3 +69,14 @@ A tool for PC QQ to export TXT chat records to excel tables
 - [ ] 支持 聊天记录清洗，去除无效聊天记录
 ### 更新日志
 
+### 如何参与贡献
+您可以直接在[issues](https://github.com/aoguai/QQtoExcel/issues)中提出您的问题或贡献您的代码
+
+## 免责声明
+此存储库遵循 MIT 开源协议，请务必理解。
+
+我们严禁所有通过本程序违反任何国家法律的行为，请在法律范围内使用本程序。
+
+默认情况下，使用此项目将被视为您同意我们的规则。请务必遵守道德和法律标准。
+
+如果您不遵守，您将对后果负责，作者将不承担任何责任！
