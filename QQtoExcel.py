@@ -1,22 +1,39 @@
 import sys
+import openpyxl
+import os
+import re
+import time
+from tqdm import tqdm
 
-import openpyxl, os, re, time
-
-workdir = os.path.dirname(os.path.abspath(__file__))
+workdir = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 
+def init_info():
+    print("—————————————————欢迎使用———————————————————")
+    print("——————————————QQtoExcelV1.1————————————————")
+    print("项目地址：https://github.com/aoguai/QQtoExcel\n")
+
+
+# 清洗excel中的非法字符，都是不常见的不可显示字符，例如退格，响铃等
 def data_clean(text):
-    # 清洗excel中的非法字符，都是不常见的不可显示字符，例如退格，响铃等
     ILLEGAL_CHARACTERS_RE = re.compile(r'[\000-\010]|[\013-\014]|[\016-\037]')
     text = ILLEGAL_CHARACTERS_RE.sub(r'', text)
     return text
 
 
+# 清洗windows文件名中的非法字符，只保留中英文和数字
 def data_win_file(text):
-    # 清洗windows文件名中的非法字符，只保留中英文和数字
-    ILLEGAL_CHARACTERS_RE = re.compile(r'[^\u4e00-\u9fa5^a-z^A-Z^0-9]')
-    text = ILLEGAL_CHARACTERS_RE.sub(r'()', text)
-    return text
+    ILLEGAL_CHARACTERS_RE = re.compile(r'[^\u4e00-\u9fa5^a-z^A-Z^\d]')
+    txt = ILLEGAL_CHARACTERS_RE.sub(r'()', text)
+    return txt
+
+
+# 设置默认输入值函数
+def get_input(msg, default='Y'):
+    r = input(msg)
+    if r == '':
+        return default
+    return r
 
 
 def get_QQChat_record(route, time_list_out=True, name_list_out=True, uid_list_out=True, cont_list_out=True):
@@ -32,7 +49,7 @@ def get_QQChat_record(route, time_list_out=True, name_list_out=True, uid_list_ou
     strs = f.read()
     f.close()
 
-    q_pattern = r'(================================================================([\s\S]*?)================================================================([\s\S]*?)================================================================)'  # 定义分隔符
+    q_pattern = r'(={64}([\s\S\消息分组:\s\S]{9,32})={64}([\s\S\消息分组:\s\S]{9,32})={64})'  # 定义分隔符
     result = re.split(q_pattern, strs)  # 以pattern的值 分割字符串
 
     # # 验证是否是4位一循环
@@ -50,7 +67,6 @@ def get_QQChat_record(route, time_list_out=True, name_list_out=True, uid_list_ou
                                                                                              ''))) + "_" + data_win_file(
             data_clean(
                 result[3 + (4 * i)].replace('\n', '').replace('\r', '').replace(' ', '').replace('消息对象:', ''))))
-
         # 群消息匹配规则
         pattern = re.compile(
             '(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+[(|<](.*)[)|>])([\s\S]*?)(\n\s*\n)')
@@ -58,29 +74,30 @@ def get_QQChat_record(route, time_list_out=True, name_list_out=True, uid_list_ou
         pattern2 = re.compile(
             '(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+)([\s\S]*?)(\n\s*\n)')
 
+        # 添加该消息对象各项消息
         m = pattern.findall(result[4 + (4 * i)])
         if len(m) > 0:
-            for i in m:
+            for j in m:
                 if time_list_out:
-                    time_list.append(i[0])
+                    time_list.append(j[0])
                 if name_list_out:
-                    name_list.append(data_clean(i[1].replace(i[2], '').replace('()', '').replace('<>', '')))
+                    name_list.append(data_clean(j[1].replace(j[2], '').replace('()', '').replace('<>', '')))
                 if uid_list_out:
-                    uid_list.append(i[2])
+                    uid_list.append(j[2])
                 if cont_list_out:
-                    cont_list.append(data_clean(i[3][1:]))
+                    cont_list.append(data_clean(j[3][1:]))
         else:
             m = pattern2.findall(result[4 + (4 * i)])
             if len(m) >= 0:
-                for i in m:
+                for j in m:
                     if time_list_out:
-                        time_list.append(i[0])
+                        time_list.append(j[0])
                     if name_list_out:
-                        name_list.append(data_clean(i[1].replace(i[2], '').replace('()', '').replace('<>', '')))
+                        name_list.append(data_clean(j[1].replace(j[2], '').replace('()', '').replace('<>', '')))
                     if uid_list_out:
                         uid_list.append('')
                     if cont_list_out:
-                        cont_list.append(data_clean(i[2][1:]))
+                        cont_list.append(data_clean(j[2][1:]))
             else:
                 break
 
@@ -113,22 +130,43 @@ def QQtoExcel(QQChat_route, workdirs=workdir, sheet_name="test", time_list_out=T
     for i in range(len(object_file_name_list)):
         file_path.append(os.path.join(workdirs, object_file_name_list[i] + '.xls'))
 
+    row0_z = get_input("是否自定义可选项标题（留空则默认N）（Y/N）：", "N")
+
     # 写入Excel标题
-    row0 = []
-    if time_list_out:
-        row0.append("时间")
-    if name_list_out:
-        row0.append("昵称")
-    if uid_list_out:
-        row0.append("QQ（邮箱）")
-    if cont_list_out:
-        row0.append("内容")
+    row0 = []  # 标题列表
+    row1 = []  # 标题序号列表
+    if row0_z == 'N' or row0_z == 'n':
+        if time_list_out:
+            row0.append("时间")
+            row1.append("time_list")
+        if name_list_out:
+            row0.append("昵称")
+            row1.append("name_list")
+        if uid_list_out:
+            row0.append("QQ（邮箱）")
+            row1.append("uid_list")
+        if cont_list_out:
+            row0.append("内容")
+            row1.append("cont_list")
+    else:
+        if time_list_out:
+            row0.append(get_input("请输入原'时间'可选项标题（留空则默认'时间'）：", "时间"))
+            row1.append("time_list")
+        if name_list_out:
+            row0.append(get_input("请输入原'昵称'可选项标题（留空则默认'昵称'）：", "昵称"))
+            row1.append("name_list")
+        if uid_list_out:
+            row0.append(get_input("请输入原'QQ（邮箱）'可选项标题（留空则默认'QQ（邮箱）'）：", "QQ（邮箱）"))
+            row1.append("uid_list")
+        if cont_list_out:
+            row0.append(get_input("请输入原'内容'可选项标题（留空则默认'内容'）：", "内容"))
+            row1.append("cont_list")
 
     if len(row0) <= 0:
         print("请选择至少一项输出内容")
         return
 
-    for i in range(len(file_path)):
+    for i in tqdm(range(len(file_path)), '导出中'):
         time_list = object_list[i][0]
         name_list = object_list[i][1]
         uid_list = object_list[i][2]
@@ -145,38 +183,31 @@ def QQtoExcel(QQChat_route, workdirs=workdir, sheet_name="test", time_list_out=T
         # 写入内容
         if time_list_out:
             for k in range(len(time_list)):
-                worksheet.cell(k + 2, row0.index("时间") + 1, time_list[k])
+                worksheet.cell(k + 2, row1.index("time_list") + 1, time_list[k])
         if name_list_out:
             for k in range(len(name_list)):
-                worksheet.cell(k + 2, row0.index("昵称") + 1, name_list[k])
+                worksheet.cell(k + 2, row1.index("name_list") + 1, name_list[k])
         if uid_list_out:
             for k in range(len(uid_list)):
-                worksheet.cell(k + 2, row0.index("QQ（邮箱）") + 1, uid_list[k])
+                worksheet.cell(k + 2, row1.index("uid_list") + 1, uid_list[k])
         if cont_list_out:
             for k in range(len(cont_list)):
-                worksheet.cell(k + 2, row0.index("内容") + 1, cont_list[k])
+                worksheet.cell(k + 2, row1.index("cont_list") + 1, cont_list[k])
 
         workboot.save(file_path[i])
         workboot.close()
 
 
 if __name__ == "__main__":
-    print("—————————————————欢迎使用—————————————————")
-    print("——————————————QQtoExcelV1.0————————————————")
-    while (True):
+    init_info()
+    while True:
         QQChat_route = input("请输入您导出的聊天记录txt路径（支持单好友、群聊与[全部消息记录.txt]）：")
-        workdirs = input("请输入您转换后欲保存的目录（留空则默认保存在out目录中）：")
-        if workdirs == "":
-            workdirs = workdir + "\\out\\"
-        sheet_name = input("请输入工作表名（留空则默认test）：")
-        if sheet_name == "":
-            sheet_name = "test"
-        sheet_name = data_clean(sheet_name)
-
-        time_o = input("是否导出时间（Y/N）：")
-        name_o = input("是否导出昵称（Y/N）：")
-        uid_o = input("是否导出uid（Y/N）：")
-        cont_o = input("是否导出内容（Y/N）：")
+        workdirs = get_input("请输入您转换后欲保存的目录（留空则默认保存在out目录中）：", workdir + "\\out\\")
+        sheet_name = data_clean(get_input("请输入工作表名（留空则默认test）：", "test"))
+        time_o = get_input("是否导出时间（留空则默认Y）（Y/N）：")
+        name_o = get_input("是否导出昵称（留空则默认Y）（Y/N）：")
+        uid_o = get_input("是否导出uid（留空则默认Y）（Y/N）：")
+        cont_o = get_input("是否导出内容（留空则默认Y）（Y/N）：")
         if time_o == "Y" or time_o == "y":
             time_list_out = True
         else:
