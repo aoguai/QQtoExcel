@@ -60,6 +60,7 @@ A tool for PC QQ to export TXT chat records to excel tables
 ## 效果
 ![1](https://github.com/aoguai/QQtoExcel/blob/main/images/1.png)
 ![2](https://github.com/aoguai/QQtoExcel/blob/main/images/2.png)
+![3](https://github.com/aoguai/QQtoExcel/blob/main/images/3.png)
 
 ## 开发规划
 ### 规划
