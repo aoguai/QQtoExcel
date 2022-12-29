@@ -6,21 +6,24 @@ from init import *
 
 def init_info():
     print("—————————————————欢迎使用———————————————————")
-    print("——————————————QQtoExcelV1.5————————————————")
+    print("——————————————QQtoExcelV1.6————————————————")
     print("项目地址：https://github.com/aoguai/QQtoExcel\n")
 
 
 if __name__ == "__main__":
     init_info()
     while True:
-        QQChat_route = input("请输入您导出的聊天记录txt路径（支持单好友、群聊与[全部消息记录.txt]）：")
-        workdirs = get_input("请输入您转换后欲保存的目录（留空则默认保存在out目录中）：", workdir + "\\out\\")
+        qq_chat_route = input("请输入您导出的聊天记录txt路径（支持单好友、群聊与[全部消息记录.txt]）：")
+        workdirs = get_input("请输入您转换后欲保存的目录（留空则默认保存在out目录中）：", WORKDIR + "\\out\\")
         sheet_name = data_clean(get_input("请输入工作表名（留空则默认test）：", "test"))
         time_o = get_input("是否导出时间（留空则默认Y）（Y/N）：")
         name_o = get_input("是否导出昵称（留空则默认Y）（Y/N）：")
         uid_o = get_input("是否导出uid（留空则默认Y）（Y/N）：")
         cont_o = get_input("是否导出内容（留空则默认Y）（Y/N）：")
         out_o = get_input("是否按好友导出（留空则默认Y）（Y/N）：")
+
+        cont_nil_out = False
+
         if time_o == "Y" or time_o == "y":
             time_list_out = True
         else:
@@ -35,6 +38,12 @@ if __name__ == "__main__":
             uid_list_out = False
         if cont_o == "Y" or cont_o == "y":
             cont_list_out = True
+
+            cont_nil_o = get_input("是否过滤无意义内容（留空则默认N）（Y/N）：", default='N')
+            if cont_nil_o == "Y" or cont_nil_o == "y":
+                cont_nil_out = True
+            else:
+                cont_nil_out = False
         else:
             cont_list_out = False
         if out_o == "Y" or out_o == "y":
@@ -61,10 +70,10 @@ if __name__ == "__main__":
 
         start = time.perf_counter()
 
-        qe = QQtoExcel(QQChat_route=QQChat_route, file_path=workdirs, sheet_name=sheet_name,
+        qe = QQtoExcel(qq_chat_route=qq_chat_route, file_path=workdirs, sheet_name=sheet_name,
                        time_list_out=time_list_out,
                        name_list_out=name_list_out, uid_list_out=uid_list_out,
-                       cont_list_out=cont_list_out, time_row_text=time_row_text,
+                       cont_list_out=cont_list_out, cont_nil_out=cont_nil_out, time_row_text=time_row_text,
                        name_row_text=name_row_text, uid_row_text=uid_row_text,
                        cont_row_text=cont_row_text, out_type=out_type)
         qe.toExcel()

@@ -3,7 +3,7 @@ import os
 import re
 import sys
 
-workdir = os.path.dirname(os.path.realpath(sys.argv[0]))
+WORKDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 
 def data_clean(text):

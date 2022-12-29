@@ -7,7 +7,7 @@ class QQtoExcel:
     """
     parameters
     ----------
-        QQChat_route : str
+        qq_chat_route : str
             QQ聊天记录路径
         file_path : str
             导出目录
@@ -21,6 +21,8 @@ class QQtoExcel:
             是否导出Uid
         cont_list_out : bool
             是否导出内容
+        cont_nil_out : bool
+            是否过滤无意义内容
         time_row_text : str
             "时间"列表头的标题
         name_row_text : str
@@ -32,8 +34,8 @@ class QQtoExcel:
         out_type : int
             导出模式，0为按好友导出，非0按分组导出
     """
-    QQChat_route = os.path.join(workdir, '全部消息记录.txt')  # 默认QQ聊天记录路径
-    file_path = workdir + "\\out\\"  # 默认导出目录
+    qq_chat_route = os.path.join(WORKDIR, '全部消息记录.txt')  # 默认QQ聊天记录路径
+    file_path = WORKDIR + "\\out\\"  # 默认导出目录
     sheet_name = "test"  # 默认工作表的名字
     row = {}  # 表头字典
     row_key_list = []  # 表头标题列表，用以确保输出有序
@@ -41,17 +43,20 @@ class QQtoExcel:
     name_list_out = True  # 是否导出昵称
     uid_list_out = True  # 是否导出UID
     cont_list_out = True  # 是否导出内容
+    cont_nil_out = False  # 是否过滤无意义内容
     out_type = 0  # 导出模式，0为按好友导出，非0按分组导出
 
-    def __init__(self, QQChat_route, file_path, sheet_name, time_list_out, name_list_out, uid_list_out, cont_list_out,
+    def __init__(self, qq_chat_route, file_path, sheet_name, time_list_out, name_list_out, uid_list_out, cont_list_out,
+                 cont_nil_out,
                  time_row_text="时间", name_row_text="昵称", uid_row_text="QQ（邮箱）", cont_row_text="内容", out_type=0):
-        self.QQChat_route = QQChat_route
+        self.qq_chat_route = qq_chat_route
         self.file_path = file_path
         self.sheet_name = sheet_name
         self.time_list_out = time_list_out
         self.name_list_out = name_list_out
         self.uid_list_out = uid_list_out
         self.cont_list_out = cont_list_out
+        self.cont_nil_out = cont_nil_out
         self.out_type = out_type
 
         # 写入Excel标题
@@ -78,72 +83,90 @@ class QQtoExcel:
         uid_list = []  # QQ or 邮箱列表
         cont_list = []  # 内容列表
 
-        f = open(self.QQChat_route, encoding="utf-8")
-        strs = f.read()
+        f = open(self.qq_chat_route, encoding="utf-8")
+        text = f.read()
         f.close()
 
-        q_pattern = r'(={64}([\s\S\消息分组:\s\S]{9,32})={64}([\s\S\消息分组:\s\S]{9,32})={64})'  # 定义分隔符
-        result = re.split(q_pattern, strs)  # 以pattern的值 分割字符串
+        pattern = r"消息分组:\s*(.+)[\s\S]*?消息对象:\s*(.+)(?:[=\n\r]*((?:\d{1,4}-(?:1[0-2]|0?[1-9])-(?:0?[1-9]|[1-2]\d|30|31)) (?:(?:[0-1]\d|2[0-3]|[0-9]):[0-5]\d:[0-5]\d))[ ]?(.*)[\n\r]([\s\S]*?)[\n\r][\n\r])+"
 
-        # # 验证是否是4位一循环
-        # print(result[0])  # 默认无关内容
-        # print(result[1+(4*n)])  # 分组-昵称
-        # print(result[2+(4*n)])  # 分组
-        # print(result[3+(4*n)])  # 昵称
-        # print(result[4+(4*n)])  # 消息内容
-        # print((len(result)-1)/4)  # 总人数
+        # 群消息匹配规则
+        group_pattern = re.compile(
+            '(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+[(|<](.*)[)|>])(.+)([\s\S]*?)?(.+)(\n\s*\n)?')
 
-        # 多对象获取消息内容
-        for i in range(int((len(result) - 1) / 4)):
+        # 好友消息匹配规则
+        friend_pattern = re.compile('(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+)([\s\S]*?)?(.+)(\n\s*\n)?')
+
+        for match in re.finditer(pattern, text):
             # 获取 保存文件名。格式：分组_昵称
             if self.out_type == 0:
-                object_file_name_list.append(data_win_file(data_clean(
-                    result[2 + (4 * i)].replace('\n', '').replace('\r', '').replace(' ', '').replace('消息分组:',
-                                                                                                     ''))) + "_" + data_win_file(
-                    data_clean(
-                        result[3 + (4 * i)].replace('\n', '').replace('\r', '').replace(' ', '').replace('消息对象:', ''))))
+                object_file_name_list.append(
+                    data_win_file(data_clean(match.group(1)) + "_" + data_clean(match.group(2))))
             else:
-                out_z_path_name = data_win_file(data_clean(
-                    result[2 + (4 * i)].replace('\n', '').replace('\r', '').replace(' ', '').replace('消息分组:', '')))
+                out_z_path_name = data_win_file(data_clean(match.group(1)))
                 out_z_path = os.path.join(self.file_path, out_z_path_name)
                 if not os.path.exists(out_z_path):
                     # print(out_z_path)
                     os.mkdir(out_z_path)  # 创建分组目录
-                object_file_name_list.append(out_z_path_name + "\\" + data_win_file(
-                    data_clean(
-                        result[3 + (4 * i)].replace('\n', '').replace('\r', '').replace(' ', '').replace('消息对象:', ''))))
+                object_file_name_list.append(out_z_path_name + "\\" + data_win_file(data_clean(match.group(2))))
 
-            # 群消息匹配规则
-            pattern = re.compile(
-                '(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+[(|<](.*)[)|>])([\s\S]*?)(\n\s*\n)')
-            # 好友消息匹配规则
-            pattern2 = re.compile(
-                '(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+)([\s\S]*?)(\n\s*\n)')
-
-            # 添加该消息对象各项消息
-            m = pattern.findall(result[4 + (4 * i)])
-            if len(m) > 0:
-                for j in m:
-                    if self.time_list_out:
-                        time_list.append(j[0])
-                    if self.name_list_out:
-                        name_list.append(data_clean(j[1].replace(j[2], '').replace('()', '').replace('<>', '')))
-                    if self.uid_list_out:
-                        uid_list.append(j[2])
-                    if self.cont_list_out:
-                        cont_list.append(data_clean(j[3][1:]))
-            else:
-                m = pattern2.findall(result[4 + (4 * i)])
-                if len(m) >= 0:
-                    for j in m:
-                        if self.time_list_out:
-                            time_list.append(j[0])
-                        if self.name_list_out:
-                            name_list.append(data_clean(j[1].replace(j[2], '').replace('()', '').replace('<>', '')))
-                        if self.uid_list_out:
-                            uid_list.append('')
+            match_text = match.group()
+            match_text_list = group_pattern.findall(match_text)
+            if match_text_list:
+                if self.cont_nil_out:
+                    for j in match_text_list:
                         if self.cont_list_out:
-                            cont_list.append(data_clean(j[2][1:]))
+                            cont_text = re.sub(f'\[(图片|语音|表情|QQ红包)\]', "", data_clean(j[5]))
+                            if len(cont_text) > 0:
+                                cont_list.append(cont_text)
+                                if self.time_list_out:
+                                    time_list.append(j[0])
+                                if self.name_list_out:
+                                    name_list.append(
+                                        data_clean(j[1].replace(j[2], '').replace('()', '').replace('<>', '')))
+                                if self.uid_list_out:
+                                    uid_list.append(j[2])
+                        else:
+                            print("如果您选择了过滤无意义内容，则不能不导出内容")
+                            break
+                else:
+                    if self.time_list_out:
+                        time_list.extend([j[0] for j in match_text_list])
+                    if self.name_list_out:
+                        name_list.extend(
+                            [j[1].replace(j[2], '').replace('()', '').replace('<>', '') for j in match_text_list])
+                    if self.uid_list_out:
+                        uid_list.extend([j[2] for j in match_text_list])
+                    if self.cont_list_out:
+                        cont_list.extend([data_clean(j[3]) for j in match_text_list])
+            else:
+                match_text_list = friend_pattern.findall(match_text)
+                if match_text_list:
+                    if self.cont_nil_out:
+                        for j in match_text_list:
+                            if self.cont_list_out:
+                                cont_text = re.sub(f'\[(图片|语音|表情|QQ红包)\]', "", data_clean(j[3]))
+                                if len(cont_text) > 0:
+                                    cont_list.append(cont_text)
+                                    if self.time_list_out:
+                                        time_list.append(j[0])
+                                    if self.name_list_out:
+                                        name_list.append(
+                                            data_clean(j[1].replace(j[2], '').replace('()', '').replace('<>', '')))
+                                    if self.uid_list_out:
+                                        uid_list.append('')
+                            else:
+                                print("如果您选择了过滤无意义内容，则不能不导出内容")
+                                break
+                    else:
+                        if self.time_list_out:
+                            time_list.extend([j[0] for j in match_text_list])
+                        if self.name_list_out:
+                            name_list.extend(
+                                [j[1].replace(j[2], '').replace('()', '').replace('<>', '') for j in match_text_list])
+                        if self.uid_list_out:
+                            uid_list.extend(['' for j in match_text_list])
+                        if self.cont_list_out:
+                            cont_list.extend([data_clean(j[3]) for j in match_text_list])
                 else:
                     break
 
@@ -161,7 +184,14 @@ class QQtoExcel:
             uid_list = []
             cont_list = []
 
-        # print(len(object_file_name_list),len(object_list))  # 判断是否一对象一文件
+        # 判断是否一对象一文件
+        # if len(object_file_name_list) == len(object_list):
+        #     print("True")
+        # else:
+        #     for i in object_file_name_list:
+        #         print(i)
+        #     for i in object_list:
+        #         print(len(i))
         return object_file_name_list, object_list
 
     # 创建Excel文件
@@ -173,7 +203,7 @@ class QQtoExcel:
 
         files_path = []  # 输出目录列表
         for i in range(len(object_file_name_list)):
-            files_path.append(os.path.join(self.file_path, object_file_name_list[i] + '.xls'))
+            files_path.append(os.path.join(self.file_path, object_file_name_list[i] + '.xlsx'))
 
         for i in tqdm(range(len(files_path)), '导出中'):
             time_list = object_list[i][0]
