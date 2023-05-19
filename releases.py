@@ -6,7 +6,7 @@ from init import *
 
 def init_info():
     print("—————————————————欢迎使用———————————————————")
-    print("——————————————QQtoExcelV1.6————————————————")
+    print("——————————————QQtoExcelV1.7————————————————")
     print("项目地址：https://github.com/aoguai/QQtoExcel\n")
 
 

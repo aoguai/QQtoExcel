@@ -36,7 +36,6 @@ A tool for PC QQ to export TXT chat records to excel tables
 - releases.exe ：**普通用户使用，不支持 CLI ，有简单 CMD 界面与引导**
 - QQtoExcel.exe ：一般开发者使用，仅支持 CLI
 
-同时你可以前往 [QQtoExcel_GUI](https://github.com/abyss-zues/QQtoExcel_GUI) 下载GUI版本
 
 ## 贡献
 
@@ -69,28 +68,39 @@ A tool for PC QQ to export TXT chat records to excel tables
 
 ### 更新日志
 
+- **2023/05/19 QQtoExcelV1.7.0版本更新**
+  - 修复 部分消息被错误分割、无法导出问题
+  - 重构 代码结构，使代码更加规范
+  - 更新 新匹配消息正则表达式，更精准的分割聊天记录
+  - 更新README
+
+<details> 
+    <summary>往期更新日志</summary>
+
 - **2022/12/29 QQtoExcelV1.6.0版本更新**
-    - 新增 过滤无意义内容 可选项，可去除无效聊天记录
-    - 修复 导出文件使用Excel打开错误 BUG
-    - 修复 部分消息被错误分割、无法导出问题
-    - 优化 代码结构，使代码更加规范
-    - 更新 新匹配消息正则表达式，更精准的分割聊天记录
-    - 更新README
+  - 新增 过滤无意义内容 可选项，可去除无效聊天记录
+  - 修复 导出文件使用Excel打开错误 BUG
+  - 修复 部分消息被错误分割、无法导出问题
+  - 优化 代码结构，使代码更加规范
+  - 更新 新匹配消息正则表达式，更精准的分割聊天记录
+  - 更新README
 - **2022/8/1 QQtoExcelV1.5.0版本更新**
-    - 新增 消息分组 可选项，可按分组导出
-    - 修复 打包程序在 windows7 不可用的情况
-    - 更新后支持 CIL
-    - 优化 代码结构
+  - 新增 消息分组 可选项，可按分组导出
+  - 修复 打包程序在 windows7 不可用的情况
+  - 更新后支持 CIL
+  - 优化 代码结构
 - **2022/7/31 更新README**
 - **2022/7/19 QQtoExcelV1.1.0版本更新**
-    - 新增 自定义可选项标题 功能
-    - 新增 操作流程一些细节显示
-    - 优化 匹配正则表达式
-    - 修复 消息对象分割错误BUG
+  - 新增 自定义可选项标题 功能
+  - 新增 操作流程一些细节显示
+  - 优化 匹配正则表达式
+  - 修复 消息对象分割错误BUG
+
+</details>
 
 ## 免责声明
 
-此存储库遵循 MIT 开源协议，请务必理解。
+此存储库遵循 [MIT 开源协议](https://github.com/aoguai/QQtoExcel/blob/main/LICENSE)，请务必理解。
 
 我们严禁所有通过本程序违反任何国家法律的行为，请在法律范围内使用本程序。
 

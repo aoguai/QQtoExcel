@@ -1,4 +1,4 @@
-# 清洗excel中的非法字符，都是不常见的不可显示字符，例如退格，响铃等
+# 清洗excel中的非法字符，都是不常见地不可显示字符，例如退格，响铃等
 import os
 import re
 import sys
