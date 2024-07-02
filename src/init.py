@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 
 import regex
 
@@ -29,22 +30,35 @@ def get_input(msg, default='Y'):
     return r
 
 
-def get_custom_filename_with_params(rule_string, message_group, message_object, index):
+def get_custom_filename_with_params(rule_string, message_group, message_object):
     matches = []
     text = rule_string
+
+    # 用于查找[]中包含的所有模式的正则表达式
+    pattern = r'(?<!["\'])\[((?:[^\[\]\x02]+|(?R)|\x02(?!\]))*)\](?<!["\'])'
+
     while True:
-        match = regex.search(r'(?<!["\'])\[((?:[^\[\]\x02]+|(?R)|\x02(?!\]))*)\](?<!["\'])', rule_string)
+        match = regex.search(pattern, rule_string)
         if not match:
             break
         content = match.group(1).replace("\x02", "")
         matches.append(content)
-        rule_string = regex.sub(r'(?<!["\'])\[((?:[^\[\]\x02]+|(?R)|\x02(?!\]))*)\](?<!["\'])', '', rule_string,
-                                count=1)
+        rule_string = regex.sub(pattern, '', rule_string, count=1)
+
     for content in matches:
         if content == '消息分组':
             text = text.replace('[消息分组]', message_group)
         if content == '消息对象':
             text = text.replace('[消息对象]', message_object)
-        if content == '序号':
-            text = text.replace('[序号]', str(index))
+
+    # 确保文件名长度不超过26个字符，并清除多余符号
+    if len(text) > 26:
+        # 清除多余符号
+        text = text.replace("()", "")[:26]
+
+        # 检查清除后的长度，如果为空字符串，设置默认文件名为 default_filename + 时间戳
+        if not text:
+            timestamp = str(int(time.time()))  # 获取当前时间戳，转换为字符串
+            text = f"default_filename_{timestamp}"  # 设置默认文件名格式
+
     return data_win_file(text)

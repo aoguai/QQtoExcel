@@ -7,6 +7,7 @@
 A tool for PC QQ to export TXT chat records to excel tables
 
 <!-- markdownlint-disable MD033 -->
+
 <table>
   <tr>
     <td>
@@ -50,38 +51,37 @@ A tool for PC QQ to export TXT chat records to excel tables
 1. 手动从QQ消息管理器中导出需要转换的消息，注意改为UTF-8-BOM
 
 2. 拉取项目并安装项目依赖
-    ```bash
-    git clone https://github.com/aoguai/QQtoExcel.git
-    cd QQtoExcel
-    pip install -r requirements.txt
-    ```
+   
+   ```bash
+   git clone https://github.com/aoguai/QQtoExcel.git
+   cd QQtoExcel
+   pip install -r requirements.txt
+   ```
+
 3. 运行 CIL 相关命令即可
-
+   
    示例：
-
-    ```bash
-    QQtoExcel 全部消息记录.txt
-    ```
+   
+   ```bash
+   QQtoExcel 全部消息记录.txt
+   ```
 
 ### GUI 与 可执行文件说明
 
 **如果您是 windows 用户，没有浏览项目代码需求**
-可以前往[下载页面](https://github.com/aoguai/QQtoExcel/releases)下载 解压后得到
+可以前往[下载页面](https://github.com/aoguai/QQtoExcel/releases)下载 解压后得到以下两个文件：
 
 - releases.exe ：**普通用户使用，不支持 CLI ，有简单 CMD 界面与引导**
 - QQtoExcel.exe ：一般开发者使用，仅支持 CLI
+
+
+  **注意：从 1.9.0 版本开始 Windows7 不在支持。如果你需要在 window7 下使用请使用 1.9.0 以前的版本**
 
 ## 贡献
 
 您可以直接在 [issues](https://github.com/aoguai/QQtoExcel/issues)
 中提出您的问题并通过 [提交PR](https://github.com/aoguai/QQtoExcel/pulls)
 贡献您的代码
-
-### 相关项目
-
-以下是一些相关项目
-
-[QQtoExcel_GUI](https://github.com/abyss-zues/QQtoExcel_GUI) ： 一个QQtoExcel的GUI界面版本
 
 ## 开发规划
 
@@ -90,7 +90,7 @@ A tool for PC QQ to export TXT chat records to excel tables
 V2 版本功能规划
 
 - [ ] 添加 GUI 界面
-- [ ] 支持 CSV 转换导出
+- [x] 支持 CSV 转换导出
 - [ ] 支持 不同文本编码 选择导出
 - [ ] 支持 更丰富的自定义导出、命名、可选项规则
 
@@ -108,16 +108,21 @@ V2 版本功能规划
 
 ### 更新日志
 
+- **2024/07/02 QQtoExcelV1.9.0 版本更新**
+  - 修复 已知BUG
+  - **支持 CSV 转换导出**
+  - 优化 操作流程一些细节显示
+  - 重构 代码结构，使代码更加规范
+
+<details> 
+    <summary>往期更新日志</summary>
+
 - **2023/09/02 QQtoExcelV1.8.0 版本更新**
   - 更新 README
   - **支持 自定义导出规则**
   - 重构 代码结构，使代码更加规范
   - 修复 部分消息被错误分割、无法导出问题
   - 更新 新匹配消息正则表达式，更精准的分割聊天记录
-
-<details> 
-    <summary>往期更新日志</summary>
-
 - **2023/05/19 QQtoExcelV1.7.0 版本更新**
   - 修复 部分消息被错误分割、无法导出问题
   - 重构 代码结构，使代码更加规范
