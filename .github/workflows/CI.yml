@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install PyInstaller
+        run: |
+          pip install pyinstaller
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build executable
+        run: |
+          pyinstaller -F -n QQtoExcel --icon=assets/logo.ico --version-file assets/my.txt --hidden-import=regex,tqdm,pandas src/ObjectListParser.py src/init.py src/QQtoExcel.py src/main.py 
+          pyinstaller -F -n releases --icon=assets/logo.ico --version-file assets/my.txt --hidden-import=regex,tqdm,pandas src/ObjectListParser.py src/init.py src/QQtoExcel.py src/releases.py 
+          ren dist QQtoExcel
+          mkdir QQtoExcel\out
+          python -m zipfile -c ${{ github.workspace }}/QQtoExcel.zip ${{ github.workspace }}/QQtoExcel
+
+      # tag 查询github-Release
+      - name: query Release Win
+        id: queryReleaseWin
+        if: startsWith(github.event.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          githubFullName: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.ref }}
+        run: |
+          [string]$tag = ${env:ref}.Substring(${env:ref}.LastIndexOf('/') + 1)
+          [string]$url = 'https://api.github.com/repos/' + ${env:githubFullName} + '/releases/tags/' + ${tag}
+          $response={}
+          try {
+            $response = Invoke-RestMethod -Uri $url -Method Get
+          } catch {
+            Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+            Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
+            # 没查到，输出
+            echo "::set-output name=needCreateRelease::true"  
+            return
+          }
+          [string]$latestUpUrl = $response.upload_url
+          Write-Host 'latestUpUrl:'$latestUpUrl
+          if ($latestUpUrl.Length -eq 0) {
+            # 没查到，输出
+            echo "::set-output name=needCreateRelease::true"  
+          }
+      # tag 创建github-Release
+      - name: create Release Win
+        id: createReleaseWin
+        if: startsWith(github.event.ref, 'refs/tags/') && steps.queryReleaseWin.outputs.needCreateRelease == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/create-release@v1.0.0
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
+      # tag 上传Release
+      - name: upload Release
+        id: uploadRelease
+        if: startsWith(github.event.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-release-asset@v1.0.1
+        with:
+          upload_url: ${{ steps.createReleaseWin.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/QQtoExcel.zip
+          asset_name: QQtoExcel_windows_${{ github.ref }}.zip
+          asset_content_type: application/zip
