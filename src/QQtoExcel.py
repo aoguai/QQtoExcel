@@ -150,8 +150,9 @@ class QQtoExcel:
                             if self.time_row_text in self.row:
                                 time_list.append(j[0])
                             if self.name_row_text in self.row:
-                                name_list.append(
-                                    data_clean(j[1].replace(j[2], '').replace('\\n', '')))
+                                cleaned_data = data_clean(j[1].replace(j[2], ''))
+                                cleaned_data = re.sub(r'[\r\n]+', '', cleaned_data)
+                                name_list.append(cleaned_data)
                             if self.uid_row_text in self.row:
                                 uid_list.append(j[3])
 
