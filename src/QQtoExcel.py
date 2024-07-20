@@ -93,75 +93,92 @@ class QQtoExcel:
         uid_list = []
         cont_list = []
 
-        with open(self.qq_chat_route, encoding="utf-8") as f:
-            text = f.read()
+        # 检查文件是否存在和权限
+        if not os.path.exists(self.qq_chat_route):
+            raise FileNotFoundError(f"文件 {self.qq_chat_route} 不存在")
+        if not os.access(self.qq_chat_route, os.R_OK):
+            raise PermissionError(f"文件 {self.qq_chat_route} 无法读取，权限不足")
 
-            pattern = re.compile(r"^\n^={64}\n^消息分组:(.+?)\n={64}\n^消息对象:(.+?)\n^={64}$",
-                                 re.DOTALL | re.MULTILINE)
-            matches = pattern.finditer(text)
+        # 检查文件是否是 .txt 文件
+        if not self.qq_chat_route.lower().endswith('.txt'):
+            raise ValueError(f"文件 {self.qq_chat_route} 不是 .txt 文件")
+        try:
 
-            matches_list = list(matches)  # 将迭代器转换为列表
+            with open(self.qq_chat_route, encoding="utf-8") as f:
+                text = f.read()
 
-            pattern_data = {}
-            # 使用正则表达式来匹配消息分组与消息对象，并去重合并
-            for i, match in enumerate(matches_list):
-                start_pos = match.end()
-                end_pos = matches_list[i + 1].start() if i + 1 < len(matches_list) else len(text)
-                group = match[1]
-                obj = match[2]
-                key = (obj, group)  # 使用元组（obj，group）作为键
+                pattern = re.compile(r"^\n^={64}\n^消息分组:(.+?)\n={64}\n^消息对象:(.+?)\n^={64}$",
+                                     re.DOTALL | re.MULTILINE)
+                matches = pattern.finditer(text)
 
-                if key in pattern_data:
-                    pattern_data[key][1].append(text[start_pos:end_pos])
-                else:
-                    pattern_data[key] = (group, [text[start_pos:end_pos]])
+                matches_list = list(matches)  # 将迭代器转换为列表
 
-            # 使用正则表达式来匹配每条聊天记录的时间、昵称、UID、内容
-            message_pattern = re.compile(
-                r'(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+?([(|<](.*)[)|>])?\n)([\s\S]*?)(?=\n\s*(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})|$)')
+                pattern_data = {}
+                # 使用正则表达式来匹配消息分组与消息对象，并去重合并
+                for i, match in enumerate(matches_list):
+                    start_pos = match.end()
+                    end_pos = matches_list[i + 1].start() if i + 1 < len(matches_list) else len(text)
+                    group = match[1]
+                    obj = match[2]
+                    key = (obj, group)  # 使用元组（obj，group）作为键
 
-            for (obj, group), (group_value, contents) in pattern_data.items():
-                if len(obj) < 42:
-                    if self.out_type == 0:
-                        object_file_name_list.append(
-                            data_win_file(data_clean(group) + "_" + data_clean(obj)))
+                    if key in pattern_data:
+                        pattern_data[key][1].append(text[start_pos:end_pos])
                     else:
-                        out_z_path_name = data_win_file(data_clean(group))
-                        out_z_path = os.path.join(self.file_path, out_z_path_name)
-                        if not os.path.exists(out_z_path):
-                            os.mkdir(out_z_path)
-                        object_file_name_list.append(out_z_path_name + "\\" + data_win_file(data_clean(obj)))
+                        pattern_data[key] = (group, [text[start_pos:end_pos]])
 
-                    match_text_list = message_pattern.findall("\n".join(contents))
-                    if match_text_list:
-                        for j in match_text_list:
-                            if not self.cont_row_text in self.row and self.cont_nil_out:
-                                raise ValueError("无意义内容过滤选项与不导出内容选项冲突")
-                            if self.cont_row_text in self.row:
-                                cont_text = data_clean(j[4])
-                                if self.cont_nil_out:
-                                    cont_text = re.sub(f'\[(图片|语音|表情|QQ红包)]', "", cont_text)
-                                    if len(cont_text.strip()) > 0:
-                                        cont_list.append(cont_text)
+                # 使用正则表达式来匹配每条聊天记录的时间、昵称、UID、内容
+                message_pattern = re.compile(
+                    r'(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})(.+?([(|<](.*)[)|>])?\n)([\s\S]*?)(?=\n\s*(\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2})|$)')
+
+                for (obj, group), (group_value, contents) in pattern_data.items():
+                    if len(obj) < 42:
+                        if self.out_type == 0:
+                            object_file_name_list.append(
+                                data_win_file(data_clean(group) + "_" + data_clean(obj)))
+                        else:
+                            out_z_path_name = data_win_file(data_clean(group))
+                            out_z_path = os.path.join(self.file_path, out_z_path_name)
+                            if not os.path.exists(out_z_path):
+                                os.mkdir(out_z_path)
+                            object_file_name_list.append(out_z_path_name + "\\" + data_win_file(data_clean(obj)))
+
+                        match_text_list = message_pattern.findall("\n".join(contents))
+                        if match_text_list:
+                            for j in match_text_list:
+                                if not self.cont_row_text in self.row and self.cont_nil_out:
+                                    raise ValueError("无意义内容过滤选项与不导出内容选项冲突")
+                                if self.cont_row_text in self.row:
+                                    cont_text = data_clean(j[4])
+                                    if self.cont_nil_out:
+                                        cont_text = re.sub(f'\[(图片|语音|表情|QQ红包)]', "", cont_text)
+                                        if len(cont_text.strip()) > 0:
+                                            cont_list.append(cont_text)
+                                        else:
+                                            continue
                                     else:
-                                        continue
-                                else:
-                                    cont_list.append(cont_text)
-                            if self.time_row_text in self.row:
-                                time_list.append(j[0])
-                            if self.name_row_text in self.row:
-                                cleaned_data = data_clean(j[1].replace(j[2], ''))
-                                cleaned_data = re.sub(r'[\r\n]+', '', cleaned_data)
-                                name_list.append(cleaned_data)
-                            if self.uid_row_text in self.row:
-                                uid_list.append(j[3])
+                                        cont_list.append(cont_text)
+                                if self.time_row_text in self.row:
+                                    time_list.append(j[0])
+                                if self.name_row_text in self.row:
+                                    cleaned_data = data_clean(j[1].replace(j[2], ''))
+                                    cleaned_data = re.sub(r'[\r\n]+', '', cleaned_data)
+                                    name_list.append(cleaned_data)
+                                if self.uid_row_text in self.row:
+                                    uid_list.append(j[3])
 
-                    object_list.append([time_list, name_list, uid_list, cont_list])
-                    # 清空列表
-                    time_list = []
-                    name_list = []
-                    uid_list = []
-                    cont_list = []
+                        object_list.append([time_list, name_list, uid_list, cont_list])
+                        # 清空列表
+                        time_list = []
+                        name_list = []
+                        uid_list = []
+                        cont_list = []
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"文件 {self.qq_chat_route} 不存在") from e
+        except PermissionError as e:
+            raise PermissionError(f"文件 {self.qq_chat_route} 无法读取，权限不足") from e
+        except Exception as e:
+            raise RuntimeError(f"读取文件 {self.qq_chat_route} 时发生未知错误: {e}") from e
 
         return object_file_name_list, object_list
 

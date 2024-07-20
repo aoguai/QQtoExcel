@@ -88,6 +88,10 @@ if __name__ == "__main__":
 
         start = time.perf_counter()
 
+        # 检查文件是否是 .txt 文件
+        if not qq_chat_route.lower().endswith('.txt'):
+            raise ValueError(f"文件 {qq_chat_route} 不是 .txt 聊天记录文件")
+
         qe = QQtoExcel(qq_chat_route=qq_chat_route, file_path=workdirs, sheet_name=sheet_name,
                        rule_string=rule_string, time_list_out=time_list_out,
                        name_list_out=name_list_out, uid_list_out=uid_list_out,
