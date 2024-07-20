@@ -1,5 +1,8 @@
 name: Bug report
 description: 反馈与提交BUG
+title: "[BUG] 标题简要描述"
+labels: [ "bug" ]
+assignees: [ ]
 body:
   - type: markdown
     attributes:
@@ -22,7 +25,7 @@ body:
         - label: 确保提供下列BUG描述及其复现步骤, 否则我同意维护者直接关闭问题
           required: true
   - type: textarea
-    id: bug-1
+    id: bug-description
     attributes:
       label: |
         BUG 描述或反馈描述
@@ -31,7 +34,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: feature-description
+    id: expected-behavior
     attributes:
       label: |
         预期的效果
@@ -40,7 +43,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: feature-description
+    id: screenshots
     attributes:
       label: |
         截图
@@ -49,7 +52,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: feature-description
+    id: system-info
     attributes:
       label: |
         系统信息
@@ -58,11 +61,11 @@ body:
     validations:
       required: true
   - type: textarea
-    id: feature-description
+    id: additional-info
     attributes:
       label: |
         额外的信息
       description: |
         在此添加关于问题的任何其他背景、猜想、推断。
     validations:
-      required: true
+      required: false
