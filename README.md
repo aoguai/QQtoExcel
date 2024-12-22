@@ -75,7 +75,7 @@ A tool for PC QQ to export TXT chat records to excel tables
 - QQtoExcel.exe ：一般开发者使用，仅支持 CLI
 
 
-  **注意：从 1.9.0 版本开始 Windows7 不在支持。如果你需要在 window7 下使用请使用 1.9.0 以前的版本**
+  **注意：从 1.9.0 版本开始 Windows7 不再受支持。如果你需要在 window7 下使用请使用 1.9.0 以前的版本**
 
 ## 贡献
 
